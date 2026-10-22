@@ -1,0 +1,140 @@
+# ===========================================
+#   ArcturoShop Server - .gitignore
+# ===========================================
+
+# ───────────────────────────────────────────
+# Node.js
+# ───────────────────────────────────────────
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+.pnpm-store/
+.npm/
+.yarn/
+
+# ───────────────────────────────────────────
+# TypeScript
+# ───────────────────────────────────────────
+dist/
+build/
+out/
+*.tsbuildinfo
+
+# ───────────────────────────────────────────
+# Variáveis de Ambiente (NUNCA commitar!)
+# ───────────────────────────────────────────
+.env
+.env.local
+.env.development
+.env.development.local
+.env.test
+.env.test.local
+.env.staging
+.env.production
+.env.production.local
+.env*.local
+
+# ───────────────────────────────────────────
+# Logs
+# ───────────────────────────────────────────
+logs/
+*.log
+*.log.*
+log/
+
+# ───────────────────────────────────────────
+# Cobertura de Testes
+# ───────────────────────────────────────────
+coverage/
+.nyc_output/
+*.lcov
+junit.xml
+test-results/
+
+# ───────────────────────────────────────────
+# Cache
+# ───────────────────────────────────────────
+.cache/
+.eslintcache
+.stylelintcache
+.parcel-cache/
+.turbo/
+.swc/
+
+# ───────────────────────────────────────────
+# Editores e IDEs
+# ───────────────────────────────────────────
+
+# VSCode
+.vscode/*
+!.vscode/extensions.json
+!.vscode/settings.json
+!.vscode/launch.json
+
+# JetBrains (WebStorm, IntelliJ)
+.idea/
+*.iml
+*.iws
+*.ipr
+
+# Vim / Neovim
+*.swp
+*.swo
+*~
+
+# Emacs
+\#*\#
+.\#*
+
+# ───────────────────────────────────────────
+# Sistema Operacional
+# ───────────────────────────────────────────
+
+# Windows
+Thumbs.db
+Thumbs.db:encryptable
+ehthumbs.db
+Desktop.ini
+$RECYCLE.BIN/
+*.lnk
+
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+._*
+.Spotlight-V100
+.Trashes
+
+# Linux
+*~
+.directory
+
+# ───────────────────────────────────────────
+# Docker
+# ───────────────────────────────────────────
+.dockerignore
+docker-compose.override.yml
+
+# ───────────────────────────────────────────
+# Banco de Dados / Storage
+# ───────────────────────────────────────────
+*.sqlite
+*.sqlite3
+*.db
+uploads/
+tmp/
+temp/
+
+# ───────────────────────────────────────────
+# Misc
+# ───────────────────────────────────────────
+*.pem
+*.key
+*.cert
+*.p12
+*.pfx
+
+/src/generated/prisma

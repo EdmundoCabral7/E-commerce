@@ -1,0 +1,20 @@
+[
+  {
+    "id": 1,
+    "header": "Outline Generation",
+    "type": "Table of Contents",
+    "status": "Done",
+    "target": "Q1",
+    "limit": "100",
+    "reviewer": "Eddie Lake"
+  },
+  {
+    "id": 2,
+    "header": "Executive Summary",
+    "type": "Executive Summary",
+    "status": "In Progress",
+    "target": "Q2",
+    "limit": "50",
+    "reviewer": "Emily Whalen"
+  }
+]

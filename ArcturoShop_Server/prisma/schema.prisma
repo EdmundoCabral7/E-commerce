@@ -1,0 +1,341 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model User {
+  id           String               @id @default(uuid())
+  email        String               @unique
+  name         String?
+  passwordHash String
+  phone        String?
+  bio          String?
+  isActive     Boolean              @default(true)
+  role         Role                 @default(USER)
+  createdAt    DateTime             @default(now())
+  updatedAt    DateTime             @updatedAt
+  cart         Cart?
+  orders       Order[]
+  questions    ProductQuestion[]
+  reviews      ProductReview[]
+  favorites    Favorite[]
+  memberships  OrganizationMember[]
+
+  @@map("users")
+}
+
+model Product {
+  id          String            @id @default(uuid())
+  name        String
+  description String?
+  price       Decimal
+  stock       Int
+  imageUrl    String?
+  images      Json?
+  isActive    Boolean           @default(true)
+  createdAt   DateTime          @default(now())
+  updatedAt   DateTime          @updatedAt
+  cartItems   CartItem[] // Relacionamento 1:N com itens de carrinho
+  orderItems  OrderItem[] // Relacionamento com itens de pedidos realizados
+  questions   ProductQuestion[]
+  reviews     ProductReview[]
+  favoritedBy Favorite[]
+
+  categoryId String?
+  category   Category? @relation(fields: [categoryId], references: [id])
+
+  organizationId String
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  promotions Promotion[] @relation("ProductPromotions")
+
+  @@map("products")
+}
+
+model Category {
+  id            String  @id @default(uuid())
+  name          String
+  description   String?
+  slug          String
+  imageUrl      String?
+  imagePublicId String?
+  isActive      Boolean @default(true)
+
+  organizationId String
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  products   Product[]
+  promotions Promotion[]
+  createdAt  DateTime    @default(now())
+  updatedAt  DateTime    @updatedAt
+
+  @@unique([organizationId, slug])
+  @@unique([organizationId, name])
+  @@map("categories")
+}
+
+model ProductQuestion {
+  id        String   @id @default(uuid())
+  productId String
+  userId    String
+  content   String
+  answer    String?
+  product   Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("product_questions")
+}
+
+model ProductReview {
+  id        String   @id @default(uuid())
+  productId String
+  userId    String
+  rating    Int // 1 a 5
+  comment   String?
+  product   Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("product_reviews")
+}
+
+model Favorite {
+  id        String   @id @default(uuid())
+  userId    String
+  productId String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  product   Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+
+  @@unique([userId, productId])
+  @@map("favorites")
+}
+
+// Histórico de Pedidos
+model Order {
+  id     String  @id @default(uuid())
+  userId String?
+  user   User?   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  organizationId String
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  total    Decimal
+  discount Decimal     @default(0)
+  status   OrderStatus @default(PENDING)
+
+  buyerName     String
+  buyerEmail    String
+  paymentMethod String
+
+  promotionId String?
+
+  items     OrderItem[]
+  createdAt DateTime    @default(now())
+  updatedAt DateTime    @updatedAt
+
+  @@map("orders")
+}
+
+model OrderItem {
+  id        String  @id @default(uuid())
+  orderId   String
+  order     Order   @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  productId String
+  product   Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+  quantity  Int
+  price     Decimal // Preço unitário no momento da compra
+  subtotal  Decimal // quantity * price
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("order_items")
+}
+
+enum OrderStatus {
+  PENDING
+  PAID
+  SHIPPED
+  DELIVERED
+  CANCELED
+}
+
+// Um carrinho por usuário autenticado
+model Cart {
+  id        String     @id @default(uuid())
+  userId    String     @unique
+  user      User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  items     CartItem[]
+  createdAt DateTime   @default(now())
+  updatedAt DateTime   @updatedAt
+
+  @@map("carts")
+}
+
+// Cada item representa um produto e sua quantidade no carrinho
+model CartItem {
+  id        String  @id @default(uuid())
+  cartId    String
+  cart      Cart    @relation(fields: [cartId], references: [id], onDelete: Cascade)
+  productId String
+  product   Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+  quantity  Int
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Garante que o mesmo produto não duplica linhas no carrinho
+  @@unique([cartId, productId])
+  @@map("cart_items")
+}
+
+enum Role {
+  USER
+  ADMIN
+}
+
+enum OrgRole {
+  OWNER
+  ADMIN
+  STAFF
+}
+
+enum PromotionType {
+  PERCENTAGE
+  FIXED
+}
+
+model Promotion {
+  id            String        @id @default(uuid())
+  name          String
+  type          PromotionType
+  value         Decimal
+  startDate     DateTime
+  endDate       DateTime
+  isActive      Boolean       @default(true)
+  minOrderValue Decimal?      @default(0)
+
+  organizationId String
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  categoryId String?
+  category   Category? @relation(fields: [categoryId], references: [id])
+
+  products Product[] @relation("ProductPromotions")
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("promotions")
+}
+
+model Organization {
+  id        String   @id @default(uuid())
+  name      String
+  slug      String   @unique
+  ownerId   String
+  logoUrl   String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  members          OrganizationMember[]
+  store            Store?
+  products         Product[]
+  categories       Category[]
+  promotions       Promotion[]
+  orders           Order[]
+  withdrawals      WalletWithdrawal[]
+  deliveryRegions  DeliveryRegion[]
+  invites          OrgInvite[]
+
+  @@map("organizations")
+}
+
+model OrgInvite {
+  id             String       @id @default(uuid())
+  organizationId String
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  email          String
+  role           OrgRole      @default(STAFF)
+  token          String       @unique @default(uuid())
+  expiresAt      DateTime
+  usedAt         DateTime?
+  createdAt      DateTime     @default(now())
+
+  @@map("org_invites")
+}
+
+model DeliveryRegion {
+  id             String       @id @default(uuid())
+  organizationId String
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  cidade         String
+  regiao         String
+  tipo           String
+  preco          Decimal
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime     @updatedAt
+
+  @@map("delivery_regions")
+}
+
+model WalletWithdrawal {
+  id             String           @id @default(uuid())
+  organizationId String
+  organization   Organization     @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  fullName       String
+  document       String
+  pixKey         String
+  pixType        String
+  amount         Decimal
+  status         WithdrawalStatus @default(PENDING)
+  createdAt      DateTime         @default(now())
+  updatedAt      DateTime         @updatedAt
+
+  @@map("wallet_withdrawals")
+}
+
+enum WithdrawalStatus {
+  PENDING
+  APPROVED
+  REJECTED
+}
+
+model OrganizationMember {
+  id             String  @id @default(uuid())
+  organizationId String
+  userId         String
+  role           OrgRole @default(STAFF)
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  user         User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([organizationId, userId])
+  @@map("organization_members")
+}
+
+model Store {
+  id             String       @id @default(uuid())
+  organizationId String       @unique
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  theme         String?
+  bannerUrl     String?
+  socialLinks   Json?   @default("{}")
+  businessHours String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("stores")
+}
